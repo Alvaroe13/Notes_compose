@@ -166,9 +166,9 @@ class NoteListViewModel @Inject constructor(
 
 
     private fun getMockNotes() = mutableListOf<Note>().apply{
-        add(Note(title= "titulo 1", content = "Contenido 1", priority = 1, timeStamp = "time"))
-        add(Note(title= "titulo 2", content = "Contenido 2", priority = 1, timeStamp = "time"))
-        add(Note(title= "titulo 3", content = "Contenido 3", priority = 1, timeStamp = "time"))
+        add(Note(id = "1", title= "titulo 1", content = "Contenido 1", priority = 1, timeStamp = "time"))
+        add(Note(id = "2", title= "titulo 2", content = "Contenido 2", priority = 1, timeStamp = "time"))
+        add(Note(id = "3", title= "titulo 3", content = "Contenido 3", priority = 1, timeStamp = "time"))
     } .toList()
 
     fun getNotes(){

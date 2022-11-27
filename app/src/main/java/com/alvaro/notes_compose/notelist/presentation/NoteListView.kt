@@ -1,5 +1,6 @@
 package com.alvaro.notes_compose.notelist.presentation
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -11,14 +12,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavController
 import com.alvaro.notes_compose.common.domain.Note
 
 
 @Composable
 fun NoteListView(
-    navController: NavController,
-    viewModel: NoteListViewModel = hiltViewModel()
+    viewModel: NoteListViewModel = hiltViewModel(),
+    navigateToDetailView: (noteId: String) -> Unit
 ) {
     val state = viewModel.state.collectAsState().value
     val notes = state.noteList
@@ -26,18 +26,21 @@ fun NoteListView(
     if(notes.isNotEmpty()){
         LazyColumn(modifier = Modifier.fillMaxSize()) {
             items(notes){ note ->
-                NoteCard(note = note)
+                NoteCard(note = note) {
+                    navigateToDetailView(it)
+                }
             }
         }
     }
 }
 
 @Composable
-fun NoteCard(note: Note) {
+fun NoteCard(note: Note, onSelectedNote: (noteId: String) -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(8.dp)
+            .clickable { onSelectedNote(note.id ?: throw NullPointerException("Note id is null and is musnt")) }
     ) {
         Row(
             modifier = Modifier

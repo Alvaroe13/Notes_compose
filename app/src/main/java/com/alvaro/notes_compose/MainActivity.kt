@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.alvaro.notes_compose.notedetails.presentation.NoteDetailsView
 import com.alvaro.notes_compose.notelist.presentation.NoteListView
 import com.alvaro.notes_compose.notelist.presentation.util.Screen
 import com.alvaro.notes_compose.ui.theme.Notes_ComposeTheme
@@ -26,17 +27,25 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colors.background
                 ) {
 
-                   val navController = rememberNavController()
-                   NavHost(
+                    val navController = rememberNavController()
+                    NavHost(
                         navController = navController,
                         startDestination = Screen.NoteListView.route
                     ) {
+
                         composable(route = Screen.NoteListView.route) {
-                            NoteListView(navController)
+                            NoteListView { noteId ->
+                                navController.navigate("${Screen.NoteDetailsView.route}/$noteId")
+                            }
                         }
+
+                        composable(route = Screen.NoteDetailsView.route + "/{noteId}"){
+                            NoteDetailsView()
+                        }
+
                     }
 
-                 }
+                }
             }
         }
     }

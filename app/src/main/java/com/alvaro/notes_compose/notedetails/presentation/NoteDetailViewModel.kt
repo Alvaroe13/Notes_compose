@@ -37,8 +37,7 @@ class NoteDetailViewModel @Inject constructor(
     private val _response: MutableSharedFlow<UIComponent> = MutableSharedFlow()
 
     init {
-        val noteId = savedStateHandle.get<String>("NoteDetailView") ?: ""
-        if (noteId.isNotBlank()){
+        savedStateHandle.get<String>("noteId")?.let{ noteId ->
             triggerEvent(NoteDetailsEvents.GetNoteById(noteId))
         }
     }

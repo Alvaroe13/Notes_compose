@@ -29,14 +29,11 @@ class NoteListViewModel @Inject constructor(
     @Named("NoteListView") private val logger: Logger,
 ) : ViewModel() {
 
-    val state: StateFlow<NoteListState> get() = _state
     private val _state: MutableStateFlow<NoteListState> = MutableStateFlow(NoteListState())
+    val state = _state.asStateFlow()
 
-    val response: SharedFlow<UIComponent> get() = _response
     private val _response: MutableSharedFlow<UIComponent> = MutableSharedFlow()
-
-    var didScreenRotated = false
-    var noteForDeletion: Note? = null
+    val response = _response.asSharedFlow()
 
     init {
         triggerEvent(NoteListEvents.GetNotes)
@@ -54,7 +51,8 @@ class NoteListViewModel @Inject constructor(
 
         when (event) {
             is NoteListEvents.GetNotes -> {
-                retrieveNoteList(event)
+                //retrieveNoteList(event)
+                getNotes()
             }
             is NoteListEvents.RemoveNoteFromCache -> {
                 removeNoteFromCache(event)
@@ -103,7 +101,6 @@ class NoteListViewModel @Inject constructor(
     }
 
     private fun deleteNote(event : NoteListEvents.ConfirmDeletion){
-        noteForDeletion = null
 
         viewModelScope.launch(dispatcherProvider.io()) {
 
@@ -133,7 +130,6 @@ class NoteListViewModel @Inject constructor(
     }
 
     private fun removeNoteFromCache(event: NoteListEvents.RemoveNoteFromCache) {
-        noteForDeletion = event.note
 
         viewModelScope.launch(dispatcherProvider.main()) {
 
@@ -165,8 +161,26 @@ class NoteListViewModel @Inject constructor(
     }
 
     private fun undoDeletion(){
-        noteForDeletion = null
         triggerEvent(NoteListEvents.GetNotes)
+    }
+
+
+    private fun getMockNotes() = mutableListOf<Note>().apply{
+        add(Note(title= "titulo 1", content = "Contenido 1", priority = 1, timeStamp = "time"))
+        add(Note(title= "titulo 2", content = "Contenido 2", priority = 1, timeStamp = "time"))
+        add(Note(title= "titulo 3", content = "Contenido 3", priority = 1, timeStamp = "time"))
+    } .toList()
+
+    fun getNotes(){
+        viewModelScope.launch(dispatcherProvider.io()) {
+            withContext(dispatcherProvider.main()){
+                _state.value =  _state.value.copy(
+                    noteList = getMockNotes(),
+                    loadingState = LoadingState.Idle,
+                    deletionState = DeletionState.Idle
+                )
+            }
+        }
     }
 
 }

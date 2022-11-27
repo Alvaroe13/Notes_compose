@@ -31,6 +31,7 @@ object Libs {
     //hilt
     const val hilt = "com.google.dagger:hilt-android:${Version.hilt}"
     const val hilt_kapt= "com.google.dagger:hilt-android-compiler:${Version.hilt}"
+    const val hilt_navigation_compose = "androidx.hilt:hilt-navigation-compose:${Version.hilt_navigation_compose}"
 
     //testing
     const val jUnit = "junit:junit:${Version.jUnit}"

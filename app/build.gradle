@@ -68,6 +68,7 @@ dependencies {
 
     implementation(Libs.viewModel)
     implementation(Libs.hilt)
+    implementation(Libs.hilt_navigation_compose)
     kapt(Libs.hilt_kapt)
     implementation(Libs.room)
     kapt(Libs.room_compiler)

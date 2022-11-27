@@ -38,7 +38,9 @@ class NoteDetailViewModel @Inject constructor(
 
     init {
         savedStateHandle.get<String>("noteId")?.let{ noteId ->
-            triggerEvent(NoteDetailsEvents.GetNoteById(noteId))
+            if (noteId.isNotEmpty()){
+                triggerEvent(NoteDetailsEvents.GetNoteById(noteId))
+            }
         }
     }
 

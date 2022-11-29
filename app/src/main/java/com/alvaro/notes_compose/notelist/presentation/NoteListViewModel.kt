@@ -35,9 +35,9 @@ class NoteListViewModel @Inject constructor(
     private val _response: MutableSharedFlow<UIComponent> = MutableSharedFlow()
     val response = _response.asSharedFlow()
 
-    init {
+    /*init {
         triggerEvent(NoteListEvents.GetNotes)
-    }
+    }*/
 
 
     fun triggerEvent(event: NoteListEvents) {
@@ -51,8 +51,7 @@ class NoteListViewModel @Inject constructor(
 
         when (event) {
             is NoteListEvents.GetNotes -> {
-                //retrieveNoteList(event)
-                getNotes()
+                retrieveNoteList(event)
             }
             is NoteListEvents.RemoveNoteFromCache -> {
                 removeNoteFromCache(event)
@@ -162,25 +161,6 @@ class NoteListViewModel @Inject constructor(
 
     private fun undoDeletion(){
         triggerEvent(NoteListEvents.GetNotes)
-    }
-
-
-    private fun getMockNotes() = mutableListOf<Note>().apply{
-        add(Note(id = "1", title= "titulo 1", content = "Contenido 1", priority = 1, timeStamp = "time"))
-        add(Note(id = "2", title= "titulo 2", content = "Contenido 2", priority = 1, timeStamp = "time"))
-        add(Note(id = "3", title= "titulo 3", content = "Contenido 3", priority = 1, timeStamp = "time"))
-    } .toList()
-
-    fun getNotes(){
-        viewModelScope.launch(dispatcherProvider.io()) {
-            withContext(dispatcherProvider.main()){
-                _state.value =  _state.value.copy(
-                    noteList = getMockNotes(),
-                    loadingState = LoadingState.Idle,
-                    deletionState = DeletionState.Idle
-                )
-            }
-        }
     }
 
 }

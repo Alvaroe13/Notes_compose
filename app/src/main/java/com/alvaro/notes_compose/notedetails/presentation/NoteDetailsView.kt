@@ -11,22 +11,41 @@ import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
+import com.alvaro.core.domain.UIComponent
 import com.alvaro.notes_compose.common.domain.Note
+import kotlinx.coroutines.flow.collectLatest
 
-@Preview(showBackground = true)
 @Composable
-fun NoteDetailsView(viewModel: NoteDetailViewModel = hiltViewModel()) {
+fun NoteDetailsView(
+    viewModel: NoteDetailViewModel = hiltViewModel(),
+    navController: NavController
+) {
 
     val note = viewModel.state.collectAsState().value.note
 
-    var titleText: String by remember { mutableStateOf("") }
-    var bodyText: String by remember { mutableStateOf("") }
+    var titleText: String by remember { mutableStateOf(note?.title ?: "") }
+    var bodyText: String by remember { mutableStateOf(note?.content ?: "") }
     val onAddNoteListener: () -> Unit = {
         viewModel.triggerEvent(
             NoteDetailsEvents.InsertNote(
                 Note(title = titleText, content = bodyText, priority = 1, timeStamp = "")
             )
         )
+    }
+
+    LaunchedEffect(key1 = true) {
+        viewModel.response.collectLatest { event ->
+            when(event) {
+                is UIComponent.Dialog -> {
+                }
+                is UIComponent.Toast -> {
+                    navController.navigateUp()
+                }
+                else -> {}
+            }
+        }
     }
 
     Box(
@@ -78,4 +97,10 @@ fun NoteDetailsView(viewModel: NoteDetailViewModel = hiltViewModel()) {
             }
         }
     }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun DetailScreenPreview(){
+    NoteDetailsView(navController = rememberNavController())
 }

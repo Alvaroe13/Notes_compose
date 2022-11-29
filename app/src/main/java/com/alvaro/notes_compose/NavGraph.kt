@@ -31,7 +31,7 @@ fun SetUpNavGraph(navController: NavHostController) {
                 }
             )
         ) {
-            NoteDetailsView()
+            NoteDetailsView(navController = navController)
         }
 
     }

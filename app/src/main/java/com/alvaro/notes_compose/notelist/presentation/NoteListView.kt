@@ -30,6 +30,9 @@ fun NoteListView(
     viewModel: NoteListViewModel = hiltViewModel(),
     navController: NavController,
 ) {
+    //TODO force retrieval, not good, to be fixed
+    viewModel.triggerEvent(NoteListEvents.GetNotes)
+
     val state = viewModel.state.collectAsState().value
     val notes = state.noteList
 

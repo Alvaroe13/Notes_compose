@@ -1,8 +1,6 @@
 package com.alvaro.notes_compose.notedetails.presentation
 
-import androidx.lifecycle.SavedStateHandle
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.*
 import com.alvaro.core.domain.DataState
 import com.alvaro.core.domain.LoadingState
 import com.alvaro.core.domain.UIComponent
@@ -30,15 +28,15 @@ class NoteDetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
-    val state: StateFlow<NoteDetailState> get() = _state
     private val _state: MutableStateFlow<NoteDetailState> = MutableStateFlow(NoteDetailState())
+    val state = _state.asStateFlow()
 
-    val response: SharedFlow<UIComponent> get() = _response
-    private val _response: MutableSharedFlow<UIComponent> = MutableSharedFlow()
+    private val _event: MutableSharedFlow<UIComponent> = MutableSharedFlow()
+    val event = _event.asSharedFlow()
 
     init {
-        savedStateHandle.get<String>("noteId")?.let{ noteId ->
-            if (noteId.isNotEmpty()){
+        savedStateHandle.get<String>("noteId")?.let { noteId ->
+            if (noteId.isNotEmpty()) {
                 triggerEvent(NoteDetailsEvents.GetNoteById(noteId))
             }
         }
@@ -81,7 +79,7 @@ class NoteDetailViewModel @Inject constructor(
                                     logger.log((dataState.uiComponent as UIComponent.None).message)
                                 }
                                 else -> {
-                                    _response.emit(dataState.uiComponent)
+                                    _event.emit(dataState.uiComponent)
                                 }
                             }
                         }
@@ -112,7 +110,7 @@ class NoteDetailViewModel @Inject constructor(
                                     logger.log((dataState.uiComponent as UIComponent.None).message)
                                 }
                                 else -> {
-                                    _response.emit(dataState.uiComponent)
+                                    _event.emit(dataState.uiComponent)
                                 }
                             }
                         }
@@ -142,7 +140,7 @@ class NoteDetailViewModel @Inject constructor(
                                     logger.log((dataState.uiComponent as UIComponent.None).message)
                                 }
                                 else -> {
-                                    _response.emit(dataState.uiComponent)
+                                    _event.emit(dataState.uiComponent)
                                 }
                             }
                         }
@@ -153,7 +151,6 @@ class NoteDetailViewModel @Inject constructor(
         }
     }
 
-
 }
 
 data class NoteDetailState(
@@ -162,8 +159,8 @@ data class NoteDetailState(
     val saveNoteType: SaveNoteType = SaveNoteType.None
 )
 
-sealed class NoteDetailsEvents{
-    data class InsertNote(val note: Note): NoteDetailsEvents()
-    data class UpdateNote(val note: Note): NoteDetailsEvents()
-    data class GetNoteById(val noteId: String): NoteDetailsEvents()
+sealed class NoteDetailsEvents {
+    data class InsertNote(val note: Note) : NoteDetailsEvents()
+    data class UpdateNote(val note: Note) : NoteDetailsEvents()
+    data class GetNoteById(val noteId: String) : NoteDetailsEvents()
 }

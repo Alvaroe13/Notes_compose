@@ -6,7 +6,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.navArgument
-import com.alvaro.notes_compose.notedetails.presentation.NoteDetailsView
+import com.alvaro.notes_compose.notedetails.presentation.NoteDetailsScreen
 import com.alvaro.notes_compose.notelist.presentation.NoteListView
 import com.alvaro.notes_compose.notelist.presentation.util.Screen
 
@@ -31,7 +31,7 @@ fun SetUpNavGraph(navController: NavHostController) {
                 }
             )
         ) {
-            NoteDetailsView(navController = navController)
+            NoteDetailsScreen(navController = navController)
         }
 
     }

@@ -4,10 +4,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.Button
-import androidx.compose.material.Icon
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
+import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.runtime.Composable
@@ -40,7 +37,6 @@ fun NoteListView(
         LazyColumn(modifier = Modifier.fillMaxSize()) {
             items(notes) { note ->
                 NoteCard(note = note) { noteId ->
-                    //navigateToDetailView(it)
                     navController.navigate("${Screen.NoteDetailsView.route}?noteId=$noteId")
                 }
             }
@@ -59,10 +55,7 @@ fun NoteListView(
                 modifier = Modifier
                     .width(55.dp)
                     .height(55.dp),
-                onClick = {
-                    //navigateToDetailView()
-                    navController.navigate(Screen.NoteDetailsView.route)
-                },
+                onClick = { navController.navigate(Screen.NoteDetailsView.route) },
                 shape = RectangleShape,
             ) {
                 Icon(Icons.Filled.Add, "")
@@ -83,44 +76,60 @@ fun NoteCard(note: Note, onSelectedNote: (noteId: String) -> Unit) {
                 )
             }
     ) {
-        Row(
+        Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = 8.dp, end = 8.dp, top = 8.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
+                .padding(start = 8.dp, end = 8.dp, top = 2.dp, bottom = 2.dp)
         ) {
-            Text(
-                text = note.title,
-                style = MaterialTheme.typography.body1,
-                color = MaterialTheme.colors.onSurface,
-
-                )
-            Text(
-                text = note.timeStamp,
-                style = MaterialTheme.typography.body1,
-                color = MaterialTheme.colors.onSurface,
-            )
-        }
-
-        Row(
-            modifier = Modifier
+            Column(
+                modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = 8.dp, end = 8.dp, top = 8.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-        ) {
-            Text(
-                text = note.content,
-                style = MaterialTheme.typography.body1,
-                color = MaterialTheme.colors.onSurface,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-            Text(
-                text = note.priority.toString(),
-                style = MaterialTheme.typography.body1,
-                color = MaterialTheme.colors.onSurface,
-            )
+                .padding(start = 8.dp, end = 8.dp, top = 12.dp , bottom = 12.dp)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 8.dp, end = 8.dp, top = 2.dp, bottom = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                ) {
+                    Text(
+                        text = note.title,
+                        style = MaterialTheme.typography.h6,
+                        color = MaterialTheme.colors.onSurface,
+
+                        )
+                    Text(
+                        text = note.timeStamp,
+                        style = MaterialTheme.typography.button,
+                        color = MaterialTheme.colors.onSurface,
+                    )
+                }
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 8.dp, end = 8.dp, top = 2.dp, bottom = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                ) {
+                    Text(
+                        text = note.content,
+                        style = MaterialTheme.typography.body2,
+                        color = MaterialTheme.colors.onSurface,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Text(
+                        text = note.priority.toString(),
+                        style = MaterialTheme.typography.body2,
+                        color = MaterialTheme.colors.onSurface,
+                    )
+                }
+
+            }
+
+
         }
+
 
     }
 }

@@ -5,7 +5,7 @@ import com.alvaro.notes_compose.common.domain.NoteRepository
 import com.alvaro.notes_compose.notelist.domain.usecase.DeleteNote
 import com.alvaro.notes_compose.notelist.domain.usecase.GetNotes
 import com.alvaro.notes_compose.notelist.domain.usecase.RemoveNoteFromCacheUseCase
-import com.alvaro.notes_compose.notelist.presentation.NoteListViewEventManager
+import com.alvaro.notes_compose.notelist.presentation.NoteListScreenEventManager
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -47,7 +47,7 @@ object NoteListModule {
 
     @Provides
     @Singleton
-    fun provideNoteListViewEventManager(): NoteListViewEventManager {
-        return NoteListViewEventManager()
+    fun provideNoteListScreenEventManager(): NoteListScreenEventManager {
+        return NoteListScreenEventManager()
     }
 }

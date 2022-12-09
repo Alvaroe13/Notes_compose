@@ -39,13 +39,7 @@ fun NoteDetailsScreen(
 
     var note: Note by remember { mutableStateOf( Note.emptyNote() ) }
 
-    note = state.note ?: Note(
-        title = state.note?.title ?: "",
-        content = state.note?.content ?: "",
-        timeStamp = state.note?.timeStamp ?: "",
-        priority = state.note?.priority ?: NotePriority.LOW,
-        noteType = state.note?.noteType ?: NoteType.GENERAL
-    )
+    note = state.note ?: note
 
 
     var showAlertDialog by rememberSaveable { mutableStateOf(false) }
@@ -83,9 +77,9 @@ fun NoteDetailsScreen(
                     )
                 },
                 goBackListener = {
-                    if (note.title.isNotEmpty() || note.content.isNotEmpty()) {
+                    if (shouldShowDialog(note, state)){
                         showAlertDialog = true
-                    } else {
+                    }else{
                         navController.navigateUp()
                     }
                 }
@@ -111,6 +105,26 @@ fun NoteDetailsScreen(
         floatingActionButtonPosition = FabPosition.Center
     )
 }
+
+private fun shouldShowDialog(note: Note, state: NoteDetailState): Boolean {
+    if (state.note != null ){
+        if(note.title != state.note.title ||
+            note.content != state.note.content ||
+            note.noteType != state.note.noteType ||
+            note.priority != state.note.priority ) {
+            return true
+        }
+    }else{
+        if(note.title.isNotEmpty() ||
+            note.content.isNotEmpty() ||
+            note.noteType != NoteType.GENERAL ||
+            note.priority != NotePriority.LOW ){
+            return true
+        }
+    }
+    return false
+}
+
 
 private fun insertNote(viewModel: NoteDetailViewModel, note: Note){
     viewModel.triggerEvent(NoteDetailsEvents.InsertNote(note))

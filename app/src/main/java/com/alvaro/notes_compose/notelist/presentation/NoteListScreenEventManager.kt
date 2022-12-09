@@ -1,6 +1,6 @@
 package com.alvaro.notes_compose.notelist.presentation
 
-class NoteListViewEventManager {
+class NoteListScreenEventManager {
 
     private val events = mutableMapOf<String, NoteListEvents>()
 

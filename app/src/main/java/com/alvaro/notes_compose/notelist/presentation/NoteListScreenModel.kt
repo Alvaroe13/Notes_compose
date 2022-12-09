@@ -25,7 +25,7 @@ class NoteListViewModel @Inject constructor(
     private val deleteNote: DeleteNote,
     private val removeNoteFromCacheUseCase: RemoveNoteFromCacheUseCase,
     private val dispatcherProvider: DispatcherProvider,
-    private val eventManager: NoteListViewEventManager,
+    private val eventManager: NoteListScreenEventManager,
     @Named("NoteListView") private val logger: Logger,
 ) : ViewModel() {
 

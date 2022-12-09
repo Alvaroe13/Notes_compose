@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -15,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -37,17 +37,15 @@ fun NoteDetailsScreen(
 
     val state = viewModel.state.collectAsState().value
 
-    var note: Note by remember {
-        mutableStateOf(
-            Note(
-                title = state.note?.title ?: "",
-                content = state.note?.content ?: "",
-                timeStamp = state.note?.timeStamp ?: "",
-                priority = state.note?.priority ?: NotePriority.LOW,
-                noteType = state.note?.noteType ?: NoteType.GENERAL
-            )
-        )
-    }
+    var note: Note by remember { mutableStateOf( Note.emptyNote() ) }
+
+    note = state.note ?: Note(
+        title = state.note?.title ?: "",
+        content = state.note?.content ?: "",
+        timeStamp = state.note?.timeStamp ?: "",
+        priority = state.note?.priority ?: NotePriority.LOW,
+        noteType = state.note?.noteType ?: NoteType.GENERAL
+    )
 
 
     var showAlertDialog by rememberSaveable { mutableStateOf(false) }
@@ -103,21 +101,23 @@ fun NoteDetailsScreen(
         },
         floatingActionButton = {
             FAB {
-                viewModel.triggerEvent(
-                    NoteDetailsEvents.InsertNote(
-                        Note(
-                            title = note.title,
-                            content = note.content,
-                            priority = note.priority,
-                            timeStamp = "",
-                            noteType = note.noteType
-                        )
-                    )
-                )
+                if (state.note == null){
+                    insertNote(viewModel, note)
+                }else{
+                    updateNote(viewModel, note)
+                }
             }
         },
         floatingActionButtonPosition = FabPosition.Center
     )
+}
+
+private fun insertNote(viewModel: NoteDetailViewModel, note: Note){
+    viewModel.triggerEvent(NoteDetailsEvents.InsertNote(note))
+}
+
+private fun updateNote(viewModel: NoteDetailViewModel, note: Note){
+    viewModel.triggerEvent(NoteDetailsEvents.UpdateNote(note))
 }
 
 @Composable
@@ -132,8 +132,8 @@ fun SpinnerNoteActions(
                 .align(Alignment.TopEnd)
                 .padding(end = 15.dp)
         ) {
-            SpinnerNotePriority { notePrioritySelected(it) }
             SpinnerNoteType { noteTypeSelected(it) }
+            SpinnerNotePriority { notePrioritySelected(it) }
         }
     }
 }
@@ -150,7 +150,7 @@ fun SpinnerNoteType(noteTypeSelected: (type: NoteType) -> Unit) {
                 .align(Alignment.TopEnd)
                 .padding(end = 15.dp)
         ) {
-            Icon(imageVector = Icons.Default.Add, contentDescription = null)
+            Icon(painter = painterResource(id = R.drawable.ic_pen_24), contentDescription = null)
 
             DropdownMenu(
                 expanded = expanded,
@@ -184,7 +184,7 @@ fun SpinnerNotePriority(notePrioritySelected: (type: NotePriority) -> Unit) {
                 .align(Alignment.TopEnd)
                 .padding(end = 15.dp)
         ) {
-            Icon(imageVector = Icons.Default.AddCircle, contentDescription = null)
+            Icon(painter = painterResource(id = R.drawable.ic_filter_24), contentDescription = null)
 
             DropdownMenu(
                 expanded = expanded,

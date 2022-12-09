@@ -17,6 +17,13 @@ class UpdateNote(private val noteRepository: NoteRepository) {
 
         try {
             emit(DataState.Data(data = noteRepository.updateNote(note, forceExceptionForTesting)))
+            emit(
+                DataState.Response(
+                    uiComponent = UIComponent.Toast(
+                        message = SUCCESS_MSG
+                    )
+                )
+            )
         } catch (e: Exception) {
             emit(
                 DataState.Response(
@@ -31,6 +38,7 @@ class UpdateNote(private val noteRepository: NoteRepository) {
 
     companion object {
         const val ERROR_MSG = "Error updating note"
+        const val SUCCESS_MSG = "Note successfully updated"
     }
 
 }

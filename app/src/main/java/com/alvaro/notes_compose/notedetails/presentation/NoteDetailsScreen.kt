@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -23,6 +24,7 @@ import androidx.navigation.compose.rememberNavController
 import com.alvaro.core.domain.UIComponent
 import com.alvaro.notes_compose.R
 import com.alvaro.notes_compose.common.domain.Note
+import com.alvaro.notes_compose.common.domain.NotePriority
 import com.alvaro.notes_compose.common.domain.NoteType
 import kotlinx.coroutines.flow.collectLatest
 
@@ -33,11 +35,19 @@ fun NoteDetailsScreen(
     navController: NavController
 ) {
 
-    val note = viewModel.state.collectAsState().value.note
+    val state = viewModel.state.collectAsState().value
 
-    var titleText: String by remember { mutableStateOf(note?.title ?: "") }
-    var bodyText: String by remember { mutableStateOf(note?.content ?: "") }
-    var noteType: NoteType by remember { mutableStateOf(NoteType.GENERAL) }
+    var note: Note by remember {
+        mutableStateOf(
+            Note(
+                title = state.note?.title ?: "",
+                content = state.note?.content ?: "",
+                timeStamp = state.note?.timeStamp ?: "",
+                priority = state.note?.priority ?: NotePriority.LOW,
+                noteType = state.note?.noteType ?: NoteType.GENERAL
+            )
+        )
+    }
 
 
     var showAlertDialog by rememberSaveable { mutableStateOf(false) }
@@ -69,12 +79,13 @@ fun NoteDetailsScreen(
         topBar = {
             Toolbar(
                 actions = {
-                    SpinnerNoteType {
-                        noteType = it
-                    }
+                    SpinnerNoteActions(
+                        notePrioritySelected = { note = note.copy(priority = it) },
+                        noteTypeSelected = { note = note.copy(noteType = it) }
+                    )
                 },
                 goBackListener = {
-                    if (titleText.isNotEmpty() || bodyText.isNotEmpty()) {
+                    if (note.title.isNotEmpty() || note.content.isNotEmpty()) {
                         showAlertDialog = true
                     } else {
                         navController.navigateUp()
@@ -84,10 +95,10 @@ fun NoteDetailsScreen(
         },
         content = {
             NoteDetailContent(
-                title = titleText,
-                body = bodyText,
-                onTitleChanged = { titleText = it },
-                onBodyChanged = { bodyText = it }
+                title = note.title,
+                body = note.content,
+                onTitleChanged = { note = note.copy( title = it) },
+                onBodyChanged = { note = note.copy( content = it) }
             )
         },
         floatingActionButton = {
@@ -95,11 +106,11 @@ fun NoteDetailsScreen(
                 viewModel.triggerEvent(
                     NoteDetailsEvents.InsertNote(
                         Note(
-                            title = titleText,
-                            content = bodyText,
-                            priority = 1,
+                            title = note.title,
+                            content = note.content,
+                            priority = note.priority,
                             timeStamp = "",
-                            noteType = noteType
+                            noteType = note.noteType
                         )
                     )
                 )
@@ -110,9 +121,25 @@ fun NoteDetailsScreen(
 }
 
 @Composable
-fun SpinnerNoteType(
+fun SpinnerNoteActions(
+    notePrioritySelected: (type: NotePriority) -> Unit,
     noteTypeSelected: (type: NoteType) -> Unit
 ) {
+
+    Box {
+        Row(
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(end = 15.dp)
+        ) {
+            SpinnerNotePriority { notePrioritySelected(it) }
+            SpinnerNoteType { noteTypeSelected(it) }
+        }
+    }
+}
+
+@Composable
+fun SpinnerNoteType(noteTypeSelected: (type: NoteType) -> Unit) {
 
     var expanded by remember { mutableStateOf(false) }
 
@@ -138,6 +165,40 @@ fun SpinnerNoteType(
                         }
                     ) {
                         Text(text = noteType.name)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun SpinnerNotePriority(notePrioritySelected: (type: NotePriority) -> Unit) {
+
+    var expanded by remember { mutableStateOf(false) }
+
+    Box {
+        Row(
+            modifier = Modifier
+                .clickable { expanded = !expanded }
+                .align(Alignment.TopEnd)
+                .padding(end = 15.dp)
+        ) {
+            Icon(imageVector = Icons.Default.AddCircle, contentDescription = null)
+
+            DropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false }
+            ) {
+
+                NotePriority.values().forEach { notePriority ->
+                    DropdownMenuItem(
+                        onClick = {
+                            notePrioritySelected(notePriority)
+                            expanded = false
+                        }
+                    ) {
+                        Text(text = notePriority.name)
                     }
                 }
             }

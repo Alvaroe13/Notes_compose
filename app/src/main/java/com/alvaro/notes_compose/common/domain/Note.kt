@@ -5,14 +5,14 @@ data class Note(
     var id: String? = null,
     var title: String,
     var content: String,
-    var priority: Int,
+    var priority: NotePriority,
     var timeStamp: String,
     var noteType: NoteType
 ) {
 
     companion object Factory {
         fun emptyNote(): Note {
-            return Note(null, "", "", 0, "", NoteType.GENERAL)
+            return Note(null, "", "", NotePriority.LOW, "", NoteType.GENERAL)
         }
     }
 }
@@ -22,3 +22,5 @@ enum class NoteType(name: String){
     GROCERIES(name = "GROCERIES"),
     GYM(name = "GYM"),
 }
+
+enum class NotePriority{ LOW, MEDIUM, HIGH }

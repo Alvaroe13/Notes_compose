@@ -6,12 +6,19 @@ data class Note(
     var title: String,
     var content: String,
     var priority: Int,
-    var timeStamp: String
+    var timeStamp: String,
+    var noteType: NoteType
 ) {
 
     companion object Factory {
         fun emptyNote(): Note {
-            return Note(null, "", "", 0, "")
+            return Note(null, "", "", 0, "", NoteType.GENERAL)
         }
     }
+}
+
+enum class NoteType(name: String){
+    GENERAL(name = "GENERAL"),
+    GROCERIES(name = "GROCERIES"),
+    GYM(name = "GYM"),
 }

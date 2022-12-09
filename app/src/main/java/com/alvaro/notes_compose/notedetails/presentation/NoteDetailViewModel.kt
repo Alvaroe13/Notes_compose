@@ -44,7 +44,7 @@ class NoteDetailViewModel @Inject constructor(
 
     fun triggerEvent(event: NoteDetailsEvents) {
 
-        _state.value = _state.value.copy(loadingState = LoadingState.Loading)
+        _state.update { it.copy(loadingState = LoadingState.Loading) }
 
         when (event) {
             is NoteDetailsEvents.InsertNote -> {

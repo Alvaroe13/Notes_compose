@@ -23,6 +23,7 @@ import androidx.navigation.compose.rememberNavController
 import com.alvaro.core.domain.UIComponent
 import com.alvaro.notes_compose.R
 import com.alvaro.notes_compose.common.domain.Note
+import com.alvaro.notes_compose.common.domain.NoteType
 import kotlinx.coroutines.flow.collectLatest
 
 
@@ -36,6 +37,7 @@ fun NoteDetailsScreen(
 
     var titleText: String by remember { mutableStateOf(note?.title ?: "") }
     var bodyText: String by remember { mutableStateOf(note?.content ?: "") }
+    var noteType: NoteType by remember { mutableStateOf(NoteType.GENERAL) }
 
 
     var showAlertDialog by rememberSaveable { mutableStateOf(false) }
@@ -51,26 +53,34 @@ fun NoteDetailsScreen(
     LaunchedEffect(key1 = true) {
         viewModel.event.collectLatest { event ->
             when (event) {
-                is UIComponent.Dialog -> {}
+                is UIComponent.Dialog -> {
+                    Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+                }
                 is UIComponent.Toast -> {
                     Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
                     navController.navigateUp()
                 }
-                is UIComponent.Empty -> {}
-                else -> {}
+                else -> Unit
             }
         }
     }
 
     Scaffold(
         topBar = {
-            Toolbar {
-                if (titleText.isNotEmpty() || bodyText.isNotEmpty()){
-                    showAlertDialog = true
-                }else{
-                    navController.navigateUp()
+            Toolbar(
+                actions = {
+                    SpinnerNoteType {
+                        noteType = it
+                    }
+                },
+                goBackListener = {
+                    if (titleText.isNotEmpty() || bodyText.isNotEmpty()) {
+                        showAlertDialog = true
+                    } else {
+                        navController.navigateUp()
+                    }
                 }
-            }
+            )
         },
         content = {
             NoteDetailContent(
@@ -88,7 +98,8 @@ fun NoteDetailsScreen(
                             title = titleText,
                             content = bodyText,
                             priority = 1,
-                            timeStamp = ""
+                            timeStamp = "",
+                            noteType = noteType
                         )
                     )
                 )
@@ -99,10 +110,51 @@ fun NoteDetailsScreen(
 }
 
 @Composable
-fun Toolbar(goBackListener: () -> Unit) {
+fun SpinnerNoteType(
+    noteTypeSelected: (type: NoteType) -> Unit
+) {
+
+    var expanded by remember { mutableStateOf(false) }
+
+    Box {
+        Row(
+            modifier = Modifier
+                .clickable { expanded = !expanded }
+                .align(Alignment.TopEnd)
+                .padding(end = 15.dp)
+        ) {
+            Icon(imageVector = Icons.Default.Add, contentDescription = null)
+
+            DropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false }
+            ) {
+
+                NoteType.values().forEach { noteType ->
+                    DropdownMenuItem(
+                        onClick = {
+                            noteTypeSelected(noteType)
+                            expanded = false
+                        }
+                    ) {
+                        Text(text = noteType.name)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun Toolbar(
+    actions: @Composable () -> Unit,
+    goBackListener: () -> Unit
+) {
+
     TopAppBar(
         title = { Text(text = stringResource(id = R.string.app_name), color = Color.White) },
         backgroundColor = colorResource(id = R.color.teal_700),
+        actions = { actions() },
         navigationIcon = {
             Icon(
                 imageVector = Icons.Filled.ArrowBack,
@@ -129,17 +181,17 @@ fun Dialog(
 ) {
 
     AlertDialog(
-        onDismissRequest = {  onDismiss()  },
+        onDismissRequest = { onDismiss() },
         confirmButton = {
             TextButton(
-                onClick = {  onConfirm()  }
+                onClick = { onConfirm() }
             ) {
                 Text(text = "Yes, leave")
             }
         },
         dismissButton = {
             TextButton(
-                onClick = {  onDismiss()  }
+                onClick = { onDismiss() }
             ) {
                 Text(text = "No, stay")
             }
@@ -174,7 +226,7 @@ fun NoteDetailContent(
                 modifier = Modifier.fillMaxWidth(),
                 value = title,
                 textStyle = MaterialTheme.typography.h5,
-                onValueChange = { onTitleChanged(it)  }
+                onValueChange = { onTitleChanged(it) }
             )
             Spacer(modifier = Modifier.height(10.dp))
             TextField(

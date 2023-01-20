@@ -8,7 +8,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -21,12 +20,11 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.alvaro.core.domain.UIComponent
 import com.alvaro.notes_compose.R
-import com.alvaro.notes_compose.common.domain.Note
 import com.alvaro.notes_compose.common.domain.NotePriority
 import com.alvaro.notes_compose.common.domain.NoteType
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 
 
 @Composable
@@ -35,103 +33,81 @@ fun NoteDetailsScreen(
     navController: NavController
 ) {
 
-    val state = viewModel.state.collectAsState().value
-
-    var note: Note by remember { mutableStateOf( Note.emptyNote() ) }
-
-    note = state.note ?: note
-
-
-    var showAlertDialog by rememberSaveable { mutableStateOf(false) }
-    if (showAlertDialog) {
-        Dialog(
-            onDismiss = { showAlertDialog = false },
-            onConfirm = { navController.navigateUp() }
-        )
-    }
-
+    val state by viewModel.screenState.collectAsState()
     val context = LocalContext.current
 
     LaunchedEffect(key1 = true) {
-        viewModel.event.collectLatest { event ->
-            when (event) {
-                is UIComponent.Dialog -> {
+        viewModel.effect.collectLatest { event ->
+            when(event){
+                is NoteDetailEffects.GoBack -> navController.navigateUp()
+                is NoteDetailEffects.ShowToast -> {
                     Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
                 }
-                is UIComponent.Toast -> {
-                    Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
-                    navController.navigateUp()
-                }
-                else -> Unit
+                is NoteDetailEffects.ShowAlert -> this@LaunchedEffect.launch {  }
             }
         }
     }
+
+    UIContent(state = state, action = viewModel::setAction)
+}
+
+@Composable
+private fun UIContent(state: NoteDetailState, action: (NoteDetailActions) -> Unit){
+    when {
+        state.isLoading -> LoadingContent()
+        state.error != null -> ErrorContent(state)
+        else -> ValidContent(state, action)
+    }
+}
+
+@Composable
+private fun ValidContent(state: NoteDetailState, action: (NoteDetailActions) -> Unit){
 
     Scaffold(
         topBar = {
             Toolbar(
                 actions = {
                     SpinnerNoteActions(
-                        notePrioritySelected = { note = note.copy(priority = it) },
-                        noteTypeSelected = { note = note.copy(noteType = it) }
+                        notePrioritySelected = { action(NoteDetailActions.NotePrioritySelected(it) ) },
+                        noteTypeSelected = { action(NoteDetailActions.NoteTypeSelected(it)) }
                     )
                 },
-                goBackListener = {
-                    if (shouldShowDialog(note, state)){
-                        showAlertDialog = true
-                    }else{
-                        navController.navigateUp()
-                    }
-                }
+                goBackListener = { action(NoteDetailActions.OnGoBackRequested) }
             )
         },
         content = {
-            NoteDetailContent(
-                title = note.title,
-                body = note.content,
-                onTitleChanged = { note = note.copy( title = it) },
-                onBodyChanged = { note = note.copy( content = it) }
-            )
+            NoteDetailContent( state = state,   action = action )
         },
         floatingActionButton = {
             FAB {
-                if (state.note == null){
-                    insertNote(viewModel, note)
-                }else{
-                    updateNote(viewModel, note)
-                }
+                action(NoteDetailActions.OnAddNoteButtonClicked)
             }
         },
         floatingActionButtonPosition = FabPosition.Center
     )
+
+    ShowAlertMessage(state = state, action = action)
+
 }
 
-private fun shouldShowDialog(note: Note, state: NoteDetailState): Boolean {
-    if (state.note != null ){
-        if(note.title != state.note.title ||
-            note.content != state.note.content ||
-            note.noteType != state.note.noteType ||
-            note.priority != state.note.priority ) {
-            return true
-        }
-    }else{
-        if(note.title.isNotEmpty() ||
-            note.content.isNotEmpty() ||
-            note.noteType != NoteType.GENERAL ||
-            note.priority != NotePriority.LOW ){
-            return true
-        }
+@Composable
+private fun ErrorContent(state: NoteDetailState){
+    // implement logic
+}
+
+@Composable
+private fun LoadingContent(){
+    // implement logic
+}
+
+@Composable
+private fun ShowAlertMessage(state: NoteDetailState, action: (NoteDetailActions) -> Unit){
+    if (state.alertMessage != null) {
+        Dialog(
+            onDismiss = { action(NoteDetailActions.OnDismissAlert) },
+            onConfirm = { action(NoteDetailActions.OnGoBackConfirmed) }
+        )
     }
-    return false
-}
-
-
-private fun insertNote(viewModel: NoteDetailViewModel, note: Note){
-    viewModel.triggerEvent(NoteDetailsEvents.InsertNote(note))
-}
-
-private fun updateNote(viewModel: NoteDetailViewModel, note: Note){
-    viewModel.triggerEvent(NoteDetailsEvents.UpdateNote(note))
 }
 
 @Composable
@@ -279,10 +255,8 @@ fun Dialog(
 
 @Composable
 fun NoteDetailContent(
-    title: String,
-    body: String,
-    onTitleChanged: (String) -> Unit,
-    onBodyChanged: (String) -> Unit
+    state: NoteDetailState,
+    action: (NoteDetailActions) -> Unit
 ) {
 
     Box(
@@ -299,17 +273,17 @@ fun NoteDetailContent(
             TextField(
                 label = { Text(text = "Title") },
                 modifier = Modifier.fillMaxWidth(),
-                value = title,
+                value = state.data.note.title,
                 textStyle = MaterialTheme.typography.h5,
-                onValueChange = { onTitleChanged(it) }
+                onValueChange = { action(NoteDetailActions.OnUpdateTitle(it)) }
             )
             Spacer(modifier = Modifier.height(10.dp))
             TextField(
                 label = { Text(text = "Body") },
                 modifier = Modifier.fillMaxSize(),
-                value = body,
+                value = state.data.note.content,
                 textStyle = MaterialTheme.typography.body1,
-                onValueChange = { onBodyChanged(it) }
+                onValueChange = { action(NoteDetailActions.OnUpdateBody(it)) }
             )
 
         }

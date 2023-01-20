@@ -1,3 +1,10 @@
 <resources>
     <string name="app_name">Notes_Compose</string>
+
+    <string name="error_saving_note">Error saving note</string>
+    <string name="leaving_room_title">Leaving Room</string>
+    <string name="leaving_room_body">Are you sure you want to leave without saving your changes?</string>
+    <string name="error_fetching_note">Something went wrong fetching note</string>
+    <string name="note_saved_successfully">Note saved successfully</string>
+    <string name="note_not_valid">Please make sure not field is empty</string>
 </resources>

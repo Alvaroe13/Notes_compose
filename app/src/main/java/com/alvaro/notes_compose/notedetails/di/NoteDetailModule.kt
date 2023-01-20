@@ -3,9 +3,9 @@ package com.alvaro.notes_compose.notedetails.di
 import com.alvaro.core.util.Logger
 import com.alvaro.core.util.TimeStampGenerator
 import com.alvaro.notes_compose.common.domain.NoteRepository
-import com.alvaro.notes_compose.notedetails.domain.usecase.GetNoteById
-import com.alvaro.notes_compose.notedetails.domain.usecase.InsertNote
-import com.alvaro.notes_compose.notedetails.domain.usecase.UpdateNote
+import com.alvaro.notes_compose.notedetails.domain.usecase.GetNoteByIdUseCase
+import com.alvaro.notes_compose.notedetails.domain.usecase.InsertNoteUseCase
+import com.alvaro.notes_compose.notedetails.domain.usecase.UpdateNoteUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -32,8 +32,8 @@ object NoteDetailModule {
     fun provideInsertNoteInteractor(
         noteRepository: NoteRepository,
         timeStampGenerator: TimeStampGenerator
-    ) : InsertNote {
-        return InsertNote(
+    ) : InsertNoteUseCase {
+        return InsertNoteUseCase(
             noteRepository,
             timeStampGenerator
         )
@@ -41,8 +41,8 @@ object NoteDetailModule {
 
     @Provides
     @Singleton
-    fun provideGetNoteByIdInteractor(noteRepository: NoteRepository) : GetNoteById {
-        return GetNoteById(noteRepository)
+    fun provideGetNoteByIdInteractor(noteRepository: NoteRepository) : GetNoteByIdUseCase {
+        return GetNoteByIdUseCase(noteRepository)
     }
 
     @Provides
@@ -53,8 +53,8 @@ object NoteDetailModule {
 
     @Provides
     @Singleton
-    fun provideUpdateNoteInteractor(noteRepository: NoteRepository) : UpdateNote {
-        return UpdateNote(noteRepository)
+    fun provideUpdateNoteInteractor(noteRepository: NoteRepository) : UpdateNoteUseCase {
+        return UpdateNoteUseCase(noteRepository)
     }
 
 }

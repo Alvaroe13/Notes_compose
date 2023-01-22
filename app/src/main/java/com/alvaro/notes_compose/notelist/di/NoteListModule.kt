@@ -2,8 +2,8 @@ package com.alvaro.notes_compose.notelist.di
 
 import com.alvaro.core.util.Logger
 import com.alvaro.notes_compose.common.domain.NoteRepository
-import com.alvaro.notes_compose.notelist.domain.usecase.DeleteNote
-import com.alvaro.notes_compose.notelist.domain.usecase.GetNotes
+import com.alvaro.notes_compose.notelist.domain.usecase.DeleteNoteUseCase
+import com.alvaro.notes_compose.notelist.domain.usecase.GetNotesUseCase
 import com.alvaro.notes_compose.notelist.domain.usecase.RemoveNoteFromCacheUseCase
 import com.alvaro.notes_compose.notelist.presentation.NoteListScreenEventManager
 import dagger.Module
@@ -29,14 +29,14 @@ object NoteListModule {
 
     @Provides
     @Singleton
-    fun provideGetNotesInteractor(noteRepository: NoteRepository) : GetNotes {
-        return GetNotes(noteRepository)
+    fun provideGetNotesInteractor(noteRepository: NoteRepository) : GetNotesUseCase {
+        return GetNotesUseCase(noteRepository)
     }
 
     @Provides
     @Singleton
-    fun provideDeleteNoteInteractor(noteRepository: NoteRepository): DeleteNote {
-        return DeleteNote(noteRepository)
+    fun provideDeleteNoteInteractor(noteRepository: NoteRepository): DeleteNoteUseCase {
+        return DeleteNoteUseCase(noteRepository)
     }
 
     @Provides

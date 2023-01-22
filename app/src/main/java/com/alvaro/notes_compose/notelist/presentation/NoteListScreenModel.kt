@@ -1,180 +1,191 @@
 package com.alvaro.notes_compose.notelist.presentation
 
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.alvaro.core.domain.DataState
-import com.alvaro.core.domain.LoadingState
-import com.alvaro.core.domain.UIComponent
 import com.alvaro.core.util.DispatcherProvider
 import com.alvaro.core.util.Logger
+import com.alvaro.notes_compose.R
 import com.alvaro.notes_compose.common.domain.Note
-import com.alvaro.notes_compose.notelist.domain.usecase.DeleteNote
-import com.alvaro.notes_compose.notelist.domain.usecase.GetNotes
-import com.alvaro.notes_compose.notelist.domain.usecase.RemoveNoteFromCacheUseCase
+import com.alvaro.notes_compose.common.presentation.Action
+import com.alvaro.notes_compose.common.presentation.BaseViewModel
+import com.alvaro.notes_compose.common.presentation.Effect
+import com.alvaro.notes_compose.common.presentation.ScreenState
+import com.alvaro.notes_compose.common.utils.ResourceProvider
 import com.alvaro.notes_compose.notelist.domain.DeletionState
+import com.alvaro.notes_compose.notelist.domain.usecase.DeleteNoteUseCase
+import com.alvaro.notes_compose.notelist.domain.usecase.GetNotesUseCase
+import com.alvaro.notes_compose.notelist.domain.usecase.RemoveNoteFromCacheUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Named
 
 @HiltViewModel
 class NoteListViewModel @Inject constructor(
-    private val getNotes: GetNotes,
-    private val deleteNote: DeleteNote,
+    private val getNotesUseCase: GetNotesUseCase,
+    private val deleteNoteUseCase: DeleteNoteUseCase,
     private val removeNoteFromCacheUseCase: RemoveNoteFromCacheUseCase,
-    private val dispatcherProvider: DispatcherProvider,
     private val eventManager: NoteListScreenEventManager,
     @Named("NoteListView") private val logger: Logger,
-) : ViewModel() {
+    private val resourceProvider: ResourceProvider,
+    dispatcherProvider: DispatcherProvider,
+) : BaseViewModel<NoteListState, NoteListActions, NoteListEffects>() {
 
-    private val _state: MutableStateFlow<NoteListState> = MutableStateFlow(NoteListState())
-    val state = _state.asStateFlow()
-
-    private val _response: MutableSharedFlow<UIComponent> = MutableSharedFlow()
-    val response = _response.asSharedFlow()
-
-    /*init {
-        triggerEvent(NoteListEvents.GetNotes)
-    }*/
-
-
-    fun triggerEvent(event: NoteListEvents) {
-
-        if(eventManager.isEventActive(event)){
-            return
-        }
-        eventManager.addEvent(event)
-
-        _state.value = _state.value.copy(loadingState = LoadingState.Loading)
-
-        when (event) {
-            is NoteListEvents.GetNotes -> {
-                retrieveNoteList(event)
-            }
-            is NoteListEvents.RemoveNoteFromCache -> {
-                removeNoteFromCache(event)
-            }
-            is NoteListEvents.ConfirmDeletion -> {
-                deleteNote(event)
-            }
-            is NoteListEvents.UndoDeletion -> {
-                undoDeletion()
-            }
-        }
-    }
-
-    private fun retrieveNoteList(event: NoteListEvents) {
-       viewModelScope.launch(dispatcherProvider.io()) {
-
-            getNotes.execute().collect { dataState ->
-
-                withContext(dispatcherProvider.main()){
-                    when (dataState) {
-                        is DataState.Data -> {
-                           _state.value =  _state.value.copy(
-                                noteList = dataState.data ?: emptyList(),
-                                loadingState = LoadingState.Idle,
-                                deletionState = DeletionState.Idle
-                           )
-                        }
-                        is DataState.Response -> {
-                            when (dataState.uiComponent) {
-                                is UIComponent.None -> {
-                                    logger.log((dataState.uiComponent as UIComponent.None).message)
-                                }
-                                else -> {
-                                    _response.emit(dataState.uiComponent)
-                                }
-                            }
-                        }
-                    }
-                }
-
-            }
-
-        }.invokeOnCompletion {
-            eventManager.removeEvent(event)
-        }
-    }
-
-    private fun deleteNote(event : NoteListEvents.ConfirmDeletion){
-
+    init {
         viewModelScope.launch(dispatcherProvider.io()) {
-
-            deleteNote.execute(event.note).collect { dataState ->
-
-                when (dataState) {
-                    is DataState.Data -> {
-                        triggerEvent(NoteListEvents.GetNotes)
-                    }
-                    is DataState.Response -> {
-                        when (dataState.uiComponent) {
-                            is UIComponent.None -> {
-                                logger.log((dataState.uiComponent as UIComponent.None).message)
-                            }
-                            else -> {
-                                _response.emit(dataState.uiComponent)
-                            }
-                        }
-                    }
-                }
-
-            }
-
-        }.invokeOnCompletion {
-            eventManager.removeEvent(event)
+            getNoteList()
         }
     }
 
-    private fun removeNoteFromCache(event: NoteListEvents.RemoveNoteFromCache) {
 
-        viewModelScope.launch(dispatcherProvider.main()) {
+//
+//    fun triggerEvent(event: NoteListEvents) {
+//
+//        if(eventManager.isEventActive(event)){
+//            return
+//        }
+//        eventManager.addEvent(event)
+//
+//        _state.value = _state.value.copy(loadingState = LoadingState.Loading)
+//
+//        when (event) {
+//            is NoteListEvents.GetNotes -> {
+//                retrieveNoteList(event)
+//            }
+//            is NoteListEvents.RemoveNoteFromCache -> {
+//                removeNoteFromCache(event)
+//            }
+//            is NoteListEvents.ConfirmDeletion -> {
+//                deleteNote(event)
+//            }
+//            is NoteListEvents.UndoDeletion -> {
+//                undoDeletion()
+//            }
+//        }
+//    }
 
-            removeNoteFromCacheUseCase(event.note).also { dataState ->
+//    private fun deleteNote(event : NoteListEvents.ConfirmDeletion){
+//
+//        viewModelScope.launch(dispatcherProvider.io()) {
+//
+//            deleteNote.execute(event.note).collect { dataState ->
+//
+//                when (dataState) {
+//                    is DataState.Data -> {
+//                        triggerEvent(NoteListEvents.GetNotes)
+//                    }
+//                    is DataState.Response -> {
+//                        when (dataState.uiComponent) {
+//                            is UIComponent.None -> {
+//                                logger.log((dataState.uiComponent as UIComponent.None).message)
+//                            }
+//                            else -> {
+//                                _response.emit(dataState.uiComponent)
+//                            }
+//                        }
+//                    }
+//                }
+//
+//            }
+//
+//        }.invokeOnCompletion {
+//            eventManager.removeEvent(event)
+//        }
+//    }
+//
+//    private fun removeNoteFromCache(event: NoteListEvents.RemoveNoteFromCache) {
+//
+//        viewModelScope.launch(dispatcherProvider.main()) {
+//
+//            removeNoteFromCacheUseCase(event.note).also { dataState ->
+//
+//                when (dataState) {
+//                    is DataState.Data -> {
+//                        _state.value = _state.value.copy(
+//                            noteList = dataState.data ?: emptyList(),
+//                            loadingState = LoadingState.Idle,
+//                            deletionState = DeletionState.OnDeletion
+//                        )
+//                    }
+//                    is DataState.Response -> {
+//                        when (dataState.uiComponent) {
+//                            is UIComponent.None -> {
+//                                logger.log((dataState.uiComponent as UIComponent.None).message)
+//                            }
+//                            else -> {
+//                                _response.emit(dataState.uiComponent)
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+//        }.invokeOnCompletion {
+//            eventManager.removeEvent(event)
+//        }
+//    }
+//
+//    private fun undoDeletion(){
+//        triggerEvent(NoteListEvents.GetNotes)
+//    }
 
-                when (dataState) {
-                    is DataState.Data -> {
-                        _state.value = _state.value.copy(
-                            noteList = dataState.data ?: emptyList(),
-                            loadingState = LoadingState.Idle,
-                            deletionState = DeletionState.OnDeletion
+    override fun createInitialScreenState(): NoteListState = NoteListState()
+
+    override suspend fun handleActions(action: NoteListActions) {
+        when (action) {
+            is NoteListActions.RemoveNoteFromCache -> Unit
+            is NoteListActions.ConfirmDeletion -> Unit
+            is NoteListActions.UndoDeletion -> Unit
+            is NoteListActions.NoteClicked -> {
+                setEffect { NoteListEffects.OpenDetailScreen(action.noteId) }
+            }
+            else -> Unit
+        }
+    }
+
+    private suspend fun getNoteList() {
+        setScreenState { currentScreenState.copy(isLoading = true) }
+
+        getNotesUseCase.execute().collect { dataState ->
+            when (dataState) {
+                is DataState.Data -> {
+                    setScreenState {
+                        currentScreenState.copy(
+                            isLoading = false,
+                            noteList = dataState.data
                         )
                     }
-                    is DataState.Response -> {
-                        when (dataState.uiComponent) {
-                            is UIComponent.None -> {
-                                logger.log((dataState.uiComponent as UIComponent.None).message)
-                            }
-                            else -> {
-                                _response.emit(dataState.uiComponent)
-                            }
-                        }
-                    }
                 }
+                is DataState.ResponseError -> {
+                    setScreenState {
+                        currentScreenState.copy(isLoading = false)
+                    }
+                    setEffect { NoteListEffects.ShowToast(resourceProvider.getString(R.string.error_fetching_msg)) }
+                }
+                else -> Unit
             }
-        }.invokeOnCompletion {
-            eventManager.removeEvent(event)
         }
+
     }
 
-    private fun undoDeletion(){
-        triggerEvent(NoteListEvents.GetNotes)
-    }
-
-}
-
-sealed class NoteListEvents {
-    object GetNotes : NoteListEvents()
-    data class RemoveNoteFromCache(val note: Note) : NoteListEvents()
-    data class ConfirmDeletion(val note: Note) : NoteListEvents()
-    object UndoDeletion : NoteListEvents()
 }
 
 data class NoteListState(
     val noteList: List<Note> = emptyList(),
-    val loadingState: LoadingState = LoadingState.Idle,
-    val uiComponent: UIComponent = UIComponent.Empty,
+    val isLoading: Boolean = false,
+    val error: String? = null,
     val deletionState: DeletionState = DeletionState.Idle
-)
+) : ScreenState
+
+sealed class NoteListActions : Action {
+    object GetNotes : NoteListActions()
+    data class RemoveNoteFromCache(val note: Note) : NoteListActions()
+    data class ConfirmDeletion(val note: Note) : NoteListActions()
+    object UndoDeletion : NoteListActions()
+    data class NoteClicked(val noteId: String) : NoteListActions()
+}
+
+sealed class NoteListEffects : Effect {
+    data class ShowToast(val message: String) : NoteListEffects()
+    data class OpenDetailScreen(val noteId: String) : NoteListEffects()
+}

@@ -7,25 +7,31 @@ import com.alvaro.notes_compose.common.domain.NoteRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
-class GetNotes(private val noteRepository: NoteRepository){
+class DeleteNoteUseCase(private val noteRepository: NoteRepository) {
+
 
     fun execute(
+        note: Note,
         forceExceptionForTesting: Boolean = false
-    ): Flow<DataState<List<Note>>> = flow {
+    ): Flow<DataState<Int>> = flow {
+
 
         try {
-            val notes = noteRepository.getAllNotes(forceExceptionForTesting)
-            emit(DataState.Data(data = notes))
+            emit( DataState.Data(data = noteRepository.deleteNote(note, forceExceptionForTesting)))
         } catch (e: Exception) {
             emit(
                 DataState.Response(
-                    uiComponent = UIComponent.Dialog(
-                        title = "Error retrieving notes from cache",
-                        message = e.localizedMessage ?: "Unknown error"
+                    uiComponent = UIComponent.Toast(
+                        message = ERROR_DELETING_NOTE
                     )
                 )
             )
         }
+
+    }
+
+    companion object {
+        const val ERROR_DELETING_NOTE = "Error deleting note from cache"
     }
 
 }

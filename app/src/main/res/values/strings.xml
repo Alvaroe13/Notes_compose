@@ -1,6 +1,8 @@
 <resources>
     <string name="app_name">Notes_Compose</string>
 
+    <string name="error_fetching_msg">Error fetching notes</string>
+
     <string name="error_saving_note">Error saving note</string>
     <string name="leaving_room_title">Leaving Room</string>
     <string name="leaving_room_body">Are you sure you want to leave without saving your changes?</string>
